@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import "semantic-ui-css/semantic.min.css";
-import { Search } from "semantic-ui-react";
+import { Icon, Loader, Search } from "semantic-ui-react";
 import CountryItem from "./CountryItem";
 import logo from "../images/logo.png";
 import "../components/styles.scss";
 import { getData } from "../api";
+import DetailedInformationModal from "./DetailedInformationModal";
 
 export interface Countries {
   Country: string;
@@ -20,38 +21,94 @@ export interface Countries {
 }
 
 export default function Table(): JSX.Element {
-  const [countriesData, setCountriesData] = useState([
-    {
-      Country: "Andorra",
-      CountryCode: "AD",
-      Slug: "andorra",
-      NewConfirmed: 27,
-      TotalConfirmed: 466,
-      NewDeaths: 1,
-      TotalDeaths: 17,
-      NewRecovered: 5,
-      TotalRecovered: 21,
-      Date: "2020-04-05T06:37:00Z",
-    },
-  ]);
+  const [countriesData, setCountriesData] = useState<Countries[]>([]);
+  const [filtredCountriesData, setFilteredCountriesData] = useState<
+    Countries[]
+  >([]);
+  const [loader, setLoader] = useState(false);
+  const [countryToModal, setCountryToModal] = useState<null | Countries>(null);
 
-  function filterFilmsByName(countriesData: Countries[], data: any) {
-    setCountriesData(
-      countriesData.filter((countriesData) =>
-        countriesData.Country.toLowerCase().includes(data.toLowerCase())
-      )
-    );
+  function filterFilmsByName(value: string | undefined) {
+    if (value) {
+      setFilteredCountriesData(
+        countriesData.filter((countriesData) =>
+          countriesData.Country.toLowerCase().includes(value.toLowerCase())
+        )
+      );
+    } else setFilteredCountriesData(countriesData);
   }
 
   useEffect(() => {
+    setLoader(true);
     async function getCountriesData() {
-      setCountriesData(await getData());
+      const data = await getData();
+      setCountriesData(data);
+      setFilteredCountriesData(data);
+      setLoader(false);
     }
     getCountriesData();
   }, []);
 
+  const handleSetCountryToModal = (country: Countries) => {
+    setCountryToModal(country);
+  };
+
+  const handleResetCountryToModal = () => {
+    setCountryToModal(null);
+  };
+
+  const sortByTotalConfirmedIncrease = () => {
+    const sortedByTotalConfirmed = filtredCountriesData.sort((a, b) => {
+      return a.TotalConfirmed - b.TotalConfirmed;
+    });
+    setFilteredCountriesData([...sortedByTotalConfirmed]);
+  };
+
+  const sortByTotalConfirmedDecrease = () => {
+    const sortedByTotalConfirmed = filtredCountriesData.sort((a, b) => {
+      return b.TotalConfirmed - a.TotalConfirmed;
+    });
+    setFilteredCountriesData([...sortedByTotalConfirmed]);
+  };
+
+  const sortByAlphabetDown = () => {
+    const sortedByCountyrName = filtredCountriesData.sort((a, b) => {
+      const nameA = a.Country.toLowerCase();
+      const nameB = b.Country.toLowerCase();
+      if (nameA < nameB) return -1;
+      if (nameA > nameB) return 1;
+      return 0;
+    });
+    setFilteredCountriesData([...sortedByCountyrName]);
+  };
+
+  const sortByAlphabetUp = () => {
+    const sortedByCountyrName = filtredCountriesData.sort((a, b) => {
+      const nameA = a.Country.toLowerCase();
+      const nameB = b.Country.toLowerCase();
+      if (nameA > nameB) return -1;
+      if (nameA < nameB) return 1;
+      return 0;
+    });
+    setFilteredCountriesData([...sortedByCountyrName]);
+  };
+
   return (
     <div>
+      <div>
+        {countryToModal && (
+          <DetailedInformationModal
+            countryName={countryToModal.Country}
+            totalConfirmed={countryToModal.TotalConfirmed}
+            totalDeaths={countryToModal.TotalDeaths}
+            totalRecovered={countryToModal.TotalRecovered}
+            onClose={handleResetCountryToModal}
+          />
+        )}
+        <div />
+        <Loader active={loader} inline="centered" size="huge" />
+      </div>
+
       <header className="app-header">
         <div className="header__logo">
           <img src={logo}></img>
@@ -59,9 +116,7 @@ export default function Table(): JSX.Element {
         </div>
         <div className="header__search">
           <Search
-            onSearchChange={(_event, data) =>
-              filterFilmsByName(countriesData, data.value)
-            }
+            onSearchChange={(_event, data) => filterFilmsByName(data.value)}
             placeholder="Search..."
             size="big"
             className="country-search"
@@ -71,13 +126,43 @@ export default function Table(): JSX.Element {
       <main>
         <div className="table-header">
           <div className="country-number">№</div>
-          <div className="country-name">Country</div>
-          <div className="country-confirmed">Total Confirmed</div>
+          <div className="country-name">
+            Country
+            <div>
+              <button className="filter__btn" onClick={sortByAlphabetDown}>
+                <Icon name="sort alphabet down" />
+              </button>
+              <button className="filter__btn" onClick={sortByAlphabetUp}>
+                <Icon name="sort alphabet up" />
+              </button>
+            </div>
+          </div>
+          <div className="country-confirmed">
+            <p>Total Confirmed</p>
+            <div>
+              {/* <button className="filter__btn" onClick={sortByAlphabetDown}>
+                <Icon name="redo" />
+              </button> */}
+              <button
+                className="filter__btn"
+                onClick={sortByTotalConfirmedDecrease}
+              >
+                <Icon name="sort numeric up" />
+              </button>
+              <button
+                className="filter__btn"
+                onClick={sortByTotalConfirmedIncrease}
+              >
+                <Icon name="sort numeric down" />
+              </button>
+            </div>
+          </div>
         </div>
         <div>
-          {countriesData.map((country, number) => {
+          {filtredCountriesData.map((country, number) => {
             return (
               <CountryItem
+                onClick={() => handleSetCountryToModal(country)}
                 key={country.CountryCode}
                 countryName={country.Country}
                 totalConfirmed={country.TotalConfirmed}
