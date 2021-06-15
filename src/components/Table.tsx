@@ -6,50 +6,41 @@ import logo from "../images/logo.png";
 import "../components/styles.scss";
 import { getData } from "../api";
 import DetailedInformationModal from "./DetailedInformationModal";
-
-export interface Countries {
-  Country: string;
-  CountryCode: string;
-  Slug: string;
-  NewConfirmed: number;
-  TotalConfirmed: number;
-  NewDeaths: number;
-  TotalDeaths: number;
-  NewRecovered: number;
-  TotalRecovered: number;
-  Date: string;
-}
+import {
+  filterFilmsByName,
+  sortByAlphabetDown,
+  sortByAlphabetUp,
+  sortByTotalConfirmedDecrease,
+  sortByTotalConfirmedIncrease,
+} from "./appFunctions";
+import { toast } from "react-toastify";
+import { Country } from "./interfaces";
 
 export default function Table(): JSX.Element {
-  const [countriesData, setCountriesData] = useState<Countries[]>([]);
-  const [filtredCountriesData, setFilteredCountriesData] = useState<
-    Countries[]
-  >([]);
+  const [countriesData, setCountriesData] = useState<Country[]>([]);
+  const [filtredCountriesData, setFilteredCountriesData] = useState<Country[]>(
+    []
+  );
   const [loader, setLoader] = useState(false);
-  const [countryToModal, setCountryToModal] = useState<null | Countries>(null);
-
-  function filterFilmsByName(value: string | undefined) {
-    if (value) {
-      setFilteredCountriesData(
-        countriesData.filter((countriesData) =>
-          countriesData.Country.toLowerCase().includes(value.toLowerCase())
-        )
-      );
-    } else setFilteredCountriesData(countriesData);
-  }
+  const [countryToModal, setCountryToModal] = useState<null | Country>(null);
+  const windowWidth = window.innerWidth;
 
   useEffect(() => {
     setLoader(true);
     async function getCountriesData() {
-      const data = await getData();
-      setCountriesData(data);
-      setFilteredCountriesData(data);
-      setLoader(false);
+      try {
+        const data = await getData();
+        setCountriesData(data);
+        setFilteredCountriesData(data);
+        setLoader(false);
+      } catch (error) {
+        toast.error(error.message);
+      }
     }
     getCountriesData();
   }, []);
 
-  const handleSetCountryToModal = (country: Countries) => {
+  const handleSetCountryToModal = (country: Country) => {
     setCountryToModal(country);
   };
 
@@ -57,44 +48,9 @@ export default function Table(): JSX.Element {
     setCountryToModal(null);
   };
 
-  const sortByTotalConfirmedIncrease = () => {
-    const sortedByTotalConfirmed = filtredCountriesData.sort((a, b) => {
-      return a.TotalConfirmed - b.TotalConfirmed;
-    });
-    setFilteredCountriesData([...sortedByTotalConfirmed]);
-  };
-
-  const sortByTotalConfirmedDecrease = () => {
-    const sortedByTotalConfirmed = filtredCountriesData.sort((a, b) => {
-      return b.TotalConfirmed - a.TotalConfirmed;
-    });
-    setFilteredCountriesData([...sortedByTotalConfirmed]);
-  };
-
-  const sortByAlphabetDown = () => {
-    const sortedByCountyrName = filtredCountriesData.sort((a, b) => {
-      const nameA = a.Country.toLowerCase();
-      const nameB = b.Country.toLowerCase();
-      if (nameA < nameB) return -1;
-      if (nameA > nameB) return 1;
-      return 0;
-    });
-    setFilteredCountriesData([...sortedByCountyrName]);
-  };
-
-  const sortByAlphabetUp = () => {
-    const sortedByCountyrName = filtredCountriesData.sort((a, b) => {
-      const nameA = a.Country.toLowerCase();
-      const nameB = b.Country.toLowerCase();
-      if (nameA > nameB) return -1;
-      if (nameA < nameB) return 1;
-      return 0;
-    });
-    setFilteredCountriesData([...sortedByCountyrName]);
-  };
-
   return (
     <div>
+      <Loader active={loader} inline="centered" size="huge" />
       <div>
         {countryToModal && (
           <DetailedInformationModal
@@ -106,9 +62,7 @@ export default function Table(): JSX.Element {
           />
         )}
         <div />
-        <Loader active={loader} inline="centered" size="huge" />
       </div>
-
       <header className="app-header">
         <div className="header__logo">
           <img src={logo}></img>
@@ -116,23 +70,47 @@ export default function Table(): JSX.Element {
         </div>
         <div className="header__search">
           <Search
-            onSearchChange={(_event, data) => filterFilmsByName(data.value)}
+            onSearchChange={(_event, data) =>
+              filterFilmsByName(
+                countriesData,
+                setFilteredCountriesData,
+                data.value
+              )
+            }
             placeholder="Search..."
-            size="big"
+            size={windowWidth < 813 ? "tiny" : "big"}
             className="country-search"
           ></Search>
         </div>
       </header>
       <main>
         <div className="table-header">
-          <div className="country-number">№</div>
+          <div className="country-number">
+            <p>№</p>
+          </div>
           <div className="country-name">
-            Country
+            <p>Country</p>
             <div>
-              <button className="filter__btn" onClick={sortByAlphabetDown}>
+              <button
+                className="filter__btn"
+                onClick={() =>
+                  sortByAlphabetDown(
+                    filtredCountriesData,
+                    setFilteredCountriesData
+                  )
+                }
+              >
                 <Icon name="sort alphabet down" />
               </button>
-              <button className="filter__btn" onClick={sortByAlphabetUp}>
+              <button
+                className="filter__btn"
+                onClick={() =>
+                  sortByAlphabetUp(
+                    filtredCountriesData,
+                    setFilteredCountriesData
+                  )
+                }
+              >
                 <Icon name="sort alphabet up" />
               </button>
             </div>
@@ -140,18 +118,25 @@ export default function Table(): JSX.Element {
           <div className="country-confirmed">
             <p>Total Confirmed</p>
             <div>
-              {/* <button className="filter__btn" onClick={sortByAlphabetDown}>
-                <Icon name="redo" />
-              </button> */}
               <button
                 className="filter__btn"
-                onClick={sortByTotalConfirmedDecrease}
+                onClick={() =>
+                  sortByTotalConfirmedDecrease(
+                    filtredCountriesData,
+                    setFilteredCountriesData
+                  )
+                }
               >
                 <Icon name="sort numeric up" />
               </button>
               <button
                 className="filter__btn"
-                onClick={sortByTotalConfirmedIncrease}
+                onClick={() =>
+                  sortByTotalConfirmedIncrease(
+                    filtredCountriesData,
+                    setFilteredCountriesData
+                  )
+                }
               >
                 <Icon name="sort numeric down" />
               </button>

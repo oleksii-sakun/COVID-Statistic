@@ -3,14 +3,7 @@ import { Modal } from "semantic-ui-react";
 import vector1 from "../images/Vector.png";
 import vector2 from "../images/Vector2.png";
 import vector3 from "../images/Vector3.png";
-
-interface ModalProps {
-  onClose: () => void;
-  countryName: string;
-  totalConfirmed: number;
-  totalDeaths: number;
-  totalRecovered: number;
-}
+import { ModalProps } from "./interfaces";
 
 export default function DetailedInformationModal({
   onClose,
@@ -19,8 +12,13 @@ export default function DetailedInformationModal({
   totalDeaths,
   totalRecovered,
 }: ModalProps): JSX.Element {
+  const windowWidth = window.innerWidth;
   return (
-    <Modal size="large" open={true} onClose={onClose}>
+    <Modal
+      size={windowWidth < 813 ? "tiny" : "large"}
+      open={true}
+      onClose={onClose}
+    >
       <Modal.Header>
         <p className="modal__country-name">{countryName}</p>
       </Modal.Header>
