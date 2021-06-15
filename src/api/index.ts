@@ -1,8 +1,10 @@
 import axios from "axios";
-import { Countries } from "../components/Table";
+import { Country } from "../components/interfaces";
 
-export const getData = async (): Promise<Countries[]> => {
-  const { data } = await axios.get("https://api.covid19api.com/summary");
+const baseUrl = "https://api.covid19api.com";
+
+export const getData = async (): Promise<Country[]> => {
+  const { data } = await axios.get(`${baseUrl}/summary`);
   const countries = await data.Countries;
 
   return countries;

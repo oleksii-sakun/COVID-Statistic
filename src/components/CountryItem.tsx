@@ -1,19 +1,12 @@
 import React from "react";
-
-interface Country {
-  key: string;
-  number: number;
-  countryName: string;
-  totalConfirmed: number;
-  onClick: () => void;
-}
+import { CountryItemProps } from "./interfaces";
 
 export default function CountryItem({
   number,
   countryName,
   totalConfirmed,
   onClick,
-}: Country): JSX.Element {
+}: CountryItemProps): JSX.Element {
   return (
     <div className="country-item" onClick={onClick}>
       <div className="country-item-number">{number}</div>
