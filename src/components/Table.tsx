@@ -22,6 +22,7 @@ export default function Table(): JSX.Element {
   const [loader, setLoader] = useState(false);
   const [countryToModal, setCountryToModal] = useState<null | Country>(null);
   const searchInputSize = window.innerWidth < 813 ? "tiny" : "big";
+  const showNoResults = filtredCountriesData.length < 1 ? true : false;
 
   useEffect(() => {
     setLoader(true);
@@ -93,6 +94,7 @@ export default function Table(): JSX.Element {
           <Search
             onSearchChange={handleCountryFilterByName}
             placeholder="Search..."
+            showNoResults={showNoResults}
             size={searchInputSize}
             className="country-search"
           ></Search>
