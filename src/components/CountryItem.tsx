@@ -9,9 +9,9 @@ export default function CountryItem({
 }: CountryItemProps): JSX.Element {
   return (
     <div className="country-item" onClick={onClick}>
-      <div className="country-item-number">{number}</div>
-      <div className="country-item-name">{countryName}</div>
-      <div className="country-item-confirmed">{totalConfirmed}</div>
+      <div className="country-item__number">{number}</div>
+      <div className="country-item__name">{countryName}</div>
+      <div className="country-item__confirmed">{totalConfirmed}</div>
     </div>
   );
 }
