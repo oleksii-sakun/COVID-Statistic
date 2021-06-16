@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from "react";
 import "semantic-ui-css/semantic.min.css";
-import { Icon, Loader, Search } from "semantic-ui-react";
+import { Icon, Loader, Search, SearchProps } from "semantic-ui-react";
 import CountryItem from "./CountryItem";
 import logo from "../images/logo.png";
 import "../components/styles.scss";
-import { getData } from "../api";
+import { getCountriesData } from "../api";
 import DetailedInformationModal from "./DetailedInformationModal";
 import {
-  filterFilmsByName,
-  sortByAlphabetDown,
-  sortByAlphabetUp,
-  sortByTotalConfirmedDecrease,
-  sortByTotalConfirmedIncrease,
-} from "./appFunctions";
+  filterCountriesByName,
+  sortByAlphabet,
+  sortByTotalConfirmed,
+} from "./countriesDataHelpers";
 import { toast } from "react-toastify";
 import { Country } from "./interfaces";
 
@@ -23,21 +21,18 @@ export default function Table(): JSX.Element {
   );
   const [loader, setLoader] = useState(false);
   const [countryToModal, setCountryToModal] = useState<null | Country>(null);
-  const windowWidth = window.innerWidth;
+  const searchInputSize = window.innerWidth < 813 ? "tiny" : "big";
 
   useEffect(() => {
     setLoader(true);
-    async function getCountriesData() {
-      try {
-        const data = await getData();
-        setCountriesData(data);
-        setFilteredCountriesData(data);
+
+    getCountriesData()
+      .then((countriesData) => {
+        setCountriesData(countriesData);
+        setFilteredCountriesData(countriesData);
         setLoader(false);
-      } catch (error) {
-        toast.error(error.message);
-      }
-    }
-    getCountriesData();
+      })
+      .catch((error) => toast.error(error.message));
   }, []);
 
   const handleSetCountryToModal = (country: Country) => {
@@ -46,6 +41,32 @@ export default function Table(): JSX.Element {
 
   const handleResetCountryToModal = () => {
     setCountryToModal(null);
+  };
+
+  const handleAlphabetSortDESC = () => {
+    setFilteredCountriesData(sortByAlphabet(filtredCountriesData, "DESC"));
+  };
+  const handleAlphabetSortASC = () => {
+    setFilteredCountriesData(sortByAlphabet(filtredCountriesData, "ASC"));
+  };
+
+  const handleCountryFilterByName = (
+    _event: React.MouseEvent<HTMLElement, MouseEvent>,
+    data: SearchProps
+  ) => {
+    setFilteredCountriesData(filterCountriesByName(countriesData, data.value));
+  };
+
+  const handleCountrySortByTotalConfirmedDECR = () => {
+    setFilteredCountriesData(
+      sortByTotalConfirmed(filtredCountriesData, "DECR")
+    );
+  };
+
+  const handleCountrySortByTotalConfirmedINCR = () => {
+    setFilteredCountriesData(
+      sortByTotalConfirmed(filtredCountriesData, "INCR")
+    );
   };
 
   return (
@@ -64,21 +85,15 @@ export default function Table(): JSX.Element {
         <div />
       </div>
       <header className="app-header">
-        <div className="header__logo">
+        <div className="app-header__logo">
           <img src={logo}></img>
           <h1>STATISTIC</h1>
         </div>
-        <div className="header__search">
+        <div>
           <Search
-            onSearchChange={(_event, data) =>
-              filterFilmsByName(
-                countriesData,
-                setFilteredCountriesData,
-                data.value
-              )
-            }
+            onSearchChange={handleCountryFilterByName}
             placeholder="Search..."
-            size={windowWidth < 813 ? "tiny" : "big"}
+            size={searchInputSize}
             className="country-search"
           ></Search>
         </div>
@@ -91,26 +106,10 @@ export default function Table(): JSX.Element {
           <div className="country-name">
             <p>Country</p>
             <div>
-              <button
-                className="filter__btn"
-                onClick={() =>
-                  sortByAlphabetDown(
-                    filtredCountriesData,
-                    setFilteredCountriesData
-                  )
-                }
-              >
+              <button className="filter__btn" onClick={handleAlphabetSortASC}>
                 <Icon name="sort alphabet down" />
               </button>
-              <button
-                className="filter__btn"
-                onClick={() =>
-                  sortByAlphabetUp(
-                    filtredCountriesData,
-                    setFilteredCountriesData
-                  )
-                }
-              >
+              <button className="filter__btn" onClick={handleAlphabetSortDESC}>
                 <Icon name="sort alphabet up" />
               </button>
             </div>
@@ -120,23 +119,13 @@ export default function Table(): JSX.Element {
             <div>
               <button
                 className="filter__btn"
-                onClick={() =>
-                  sortByTotalConfirmedDecrease(
-                    filtredCountriesData,
-                    setFilteredCountriesData
-                  )
-                }
+                onClick={handleCountrySortByTotalConfirmedDECR}
               >
                 <Icon name="sort numeric up" />
               </button>
               <button
                 className="filter__btn"
-                onClick={() =>
-                  sortByTotalConfirmedIncrease(
-                    filtredCountriesData,
-                    setFilteredCountriesData
-                  )
-                }
+                onClick={handleCountrySortByTotalConfirmedINCR}
               >
                 <Icon name="sort numeric down" />
               </button>

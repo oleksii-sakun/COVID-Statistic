@@ -20,7 +20,7 @@ export default function DetailedInformationModal({
       onClose={onClose}
     >
       <Modal.Header>
-        <p className="modal__country-name">{countryName}</p>
+        <p className="modal-country__name">{countryName}</p>
       </Modal.Header>
       <Modal.Content>
         <div className="modal-items">
@@ -49,7 +49,7 @@ export default function DetailedInformationModal({
       </Modal.Content>
       <Modal.Actions>
         <div className="modal-actions">
-          <button color="blue" className="modal__btn" onClick={onClose}>
+          <button color="blue" className="modal-actions__btn" onClick={onClose}>
             OK
           </button>
         </div>
